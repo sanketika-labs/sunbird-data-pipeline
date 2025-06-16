@@ -73,7 +73,8 @@ object UserMetadataUpdater {
         val subject = framework.getOrDefault("subject", List().asJava)
         val frameworkIdList = framework.getOrDefault("id", List().asJava)
         val id = if (!frameworkIdList.isEmpty) frameworkIdList.get(0) else ""
-        userCacheData.+=("board" -> board, "medium" -> medium, "grade" -> grade, "subject" -> subject, "framework" -> id)
+        val profileConfig = framework.getOrDefault("profileConfig", List().asJava)
+        userCacheData.+=("board" -> board, "medium" -> medium, "grade" -> grade, "subject" -> subject, "framework" -> id, "profileConfig" -> profileConfig)
       }
 
       //Location and School Information
