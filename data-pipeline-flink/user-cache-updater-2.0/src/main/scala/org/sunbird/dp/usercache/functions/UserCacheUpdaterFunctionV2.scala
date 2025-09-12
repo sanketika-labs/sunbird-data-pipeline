@@ -41,6 +41,10 @@ class UserCacheUpdaterFunctionV2(config: UserCacheUpdaterConfigV2)(implicit val 
 
   override def processElement(event: Event, context: ProcessFunction[Event, Event]#Context, metrics: Metrics): Unit = {
     metrics.incCounter(config.totalEventsCount)
+    if (!"AUDIT".equals(event.eid())) {
+      metrics.incCounter(config.skipCount)
+      return
+    }
     val userId = event.getId
     try {
       Option(userId).map(id => {
