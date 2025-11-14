@@ -55,6 +55,24 @@ object UserMetadataUpdater {
 
     //?fields=locations is appended in url to get userLocation in API response
     val userReadRes = gson.fromJson[UserReadResult](restUtil.get(String.format("%s%s",config.userReadApiUrl, userId + "?fields=" + config.userReadApiFields)), classOf[UserReadResult])
+    val url = String.format("%s%s", config.userReadApiUrl, userId + "?fields=" + config.userReadApiFields)
+    logger.debug(s"Calling User Read API: ${url}")
+
+    val userReadRes = try {
+      val responseStr = restUtil.get(url)
+      gson.fromJson[UserReadResult](responseStr, classOf[UserReadResult])
+    } catch {
+      case ex: Exception if ex.isInstanceOf[java.net.URISyntaxException] || ex.isInstanceOf[IllegalArgumentException] || ex.isInstanceOf[com.google.gson.JsonSyntaxException] || (ex.getCause != null && ex.getCause.isInstanceOf[java.net.URISyntaxException]) =>
+        try {
+          logger.warn(s"Invalid userId or unexpected User Read API response for userId: ${userId}. cause: ${ex.getClass.getSimpleName} - ${ex.getMessage}. Event: ${event.getJson()}")
+        } catch {
+          case _: Exception => logger.warn(s"Invalid userId detected and failed to serialize event. userId: ${userId}")
+        }
+        metrics.incCounter(config.apiReadMissCount)
+        return userCacheData
+      case ex: Exception =>
+        throw ex
+    }
     if(event.isValid(userReadRes)) {
       // Inc API Read metrics
       metrics.incCounter(config.apiReadSuccessCount)
@@ -112,9 +130,9 @@ object UserMetadataUpdater {
       logger.info(s"User Read API has response as ${userReadRes.responseCode.toUpperCase} for user: ${userId}")
       metrics.incCounter(config.apiReadMissCount)
     } else {
-      logger.info(s"User Read API does not have details for user: ${userId}")
+      logger.info(s"User Read API does not have details for userId: ${userId}, responseCode: ${userReadRes.responseCode}, params: ${gson.toJson(userReadRes.params)}, result: ${gson.toJson(userReadRes.result)}")
       metrics.incCounter(config.apiReadMissCount)
-      throw new Exception(s"User Read API does not have details for user: ${userId}")
+      // throw new Exception(s"User Read API does not have details for user: ${userId}")
     }
     userCacheData
   }
