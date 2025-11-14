@@ -53,8 +53,6 @@ object UserMetadataUpdater {
                             restUtil: RestUtil): mutable.Map[String, AnyRef] = {
     var userCacheData: mutable.Map[String, AnyRef] = mutable.Map[String, AnyRef]()
 
-    //?fields=locations is appended in url to get userLocation in API response
-    val userReadRes = gson.fromJson[UserReadResult](restUtil.get(String.format("%s%s",config.userReadApiUrl, userId + "?fields=" + config.userReadApiFields)), classOf[UserReadResult])
     val url = String.format("%s%s", config.userReadApiUrl, userId + "?fields=" + config.userReadApiFields)
     logger.debug(s"Calling User Read API: ${url}")
 
