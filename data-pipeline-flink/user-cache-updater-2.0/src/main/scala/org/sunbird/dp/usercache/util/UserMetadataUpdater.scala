@@ -61,11 +61,7 @@ object UserMetadataUpdater {
       gson.fromJson[UserReadResult](responseStr, classOf[UserReadResult])
     } catch {
       case ex: Exception if ex.isInstanceOf[java.net.URISyntaxException] || ex.isInstanceOf[IllegalArgumentException] || ex.isInstanceOf[com.google.gson.JsonSyntaxException] || (ex.getCause != null && ex.getCause.isInstanceOf[java.net.URISyntaxException]) =>
-        try {
-          logger.warn(s"Invalid userId or unexpected User Read API response for userId: ${userId}. cause: ${ex.getClass.getSimpleName} - ${ex.getMessage}. Event: ${event.getJson()}")
-        } catch {
-          case _: Exception => logger.warn(s"Invalid userId detected and failed to serialize event. userId: ${userId}")
-        }
+        logger.warn(s"Invalid userId or unexpected User Read API response for userId: ${userId}. cause: ${ex.getClass.getSimpleName} - ${ex.getMessage}. Event: ${event.getJson()}")
         metrics.incCounter(config.apiReadMissCount)
         return userCacheData
       case ex: Exception =>
